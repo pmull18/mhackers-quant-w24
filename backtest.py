@@ -23,8 +23,8 @@ class backtest:
         print(algo.ticker.index)
         for day in algo.ticker.index:#change this
             
-            algo.buy("AAPL", day)
-            algo.sell("AAPL", day)
+            algo.decide("AAPL", day)
+
             self.portfolioVal.append(algo.getCurrVal(day))
             print(algo.getCurrVal(day))
             
