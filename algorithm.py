@@ -9,17 +9,21 @@ class algorithm:
     portfolio = 0 #list of ticker, amt
     cash = 1000000
     ticker_symbols = "AAPL"
-    ticker = yf.download(ticker_symbols, "2022-12-13", "2024-01-01")
+    start_date = "2021-12-13"
+    end_date = "2023-01-01"
+    ticker = yf.download(ticker_symbols, start_date, end_date, progress=False)
+    SPY = "SPY"
+    market_ticker = yf.download(SPY, start_date, end_date, progress=False)
     fourteen_day_ma = [] #just AAPL for now
     trades = []
     RSI_vals = []
     return_vals = []
     portfolio_vals = []
-    day_count = 1
+    RSI_day_count = 1
     prev_price = 0
     today_return = 0
 
-    def __init__(self, day):
+    def __init__(self):
         #put first 14 values into RSI list
         # average_gain()
         # set_rsi()
@@ -31,10 +35,10 @@ class algorithm:
         #     fourteen_day_ma += price_on_day
 
 
-
+        return
         
         # ticker = yf.download(tick, start_date, end_date)
-        pass
+        
 
     def buy(self, tick, day):
         # print(self.ticker.loc[day]["Close"])
@@ -45,7 +49,6 @@ class algorithm:
         self.cash -= buy_amt * price_on_day
         data = {"AAPL", buy_amt, day}
         self.trades.append(data)
-        pass
 
     def sell(self, tick, day):
         # print(ticker[day])
@@ -57,33 +60,39 @@ class algorithm:
         self.cash += sell_amt * price_on_day
         data = {"AAPL", -sell_amt, day}
         self.trades.append(data)
-        pass
+        
 
     def calculate_gain(self):
         total_gain = 0
         for i in self.fourteen_day_ma:
             if i > 0:
                 total_gain += i
-        if self.day_count > 14:
-            self.day_count = 14
-        return total_gain / self.day_count
+        if self.RSI_day_count > 14:
+            self.RSI_day_count = 14
+        # print("Total gain: ", total_gain)
+        # print("Average gain: ", total_gain / self.RSI_day_count)
+        return total_gain / self.RSI_day_count
 
     def calculate_loss(self):
         total_loss = 0
         for i in self.fourteen_day_ma:
             if i < 0:
                 total_loss += i
-        if self.day_count > 14:
-            self.day_count = 14
-        return total_loss / self.day_count #fix later: divide by zero issue
+        if self.RSI_day_count > 14:
+            self.RSI_day_count = 14
+        return -(total_loss / self.RSI_day_count) #fix later: divide by zero issue
 
     def RSI_val(self, day):
         # push/pop values on day
         self.fourteen_day_ma.append(self.today_return - 1) # -1 for changing to excess return
-        if self.day_count >= 14:
+        if self.RSI_day_count >= 14:
             self.fourteen_day_ma.pop(0)
         avg_gain = self.calculate_gain()
+        # print(avg_gain)
         avg_loss = self.calculate_loss()
+        # print(avg_loss)
+        # print(avg_gain/avg_loss)
+        # print(100 - (100 / (1 + avg_gain/avg_loss)))
         return 100 - (100 / (1 + avg_gain/avg_loss))
 
     def getCurrVal(self, day):
@@ -92,8 +101,8 @@ class algorithm:
         return portfolio_val
 
     def decide(self, tick, day):
-        if self.day_count == 1:
-            self.day_count += 1
+        if self.RSI_day_count == 1:
+            self.RSI_day_count += 1
             self.prev_price = self.ticker.loc[day]["Close"]
             return
         self.today_return = self.ticker.loc[day]["Close"] / self.prev_price
@@ -106,6 +115,6 @@ class algorithm:
         elif RSI <= 30:
             self.buy("AAPL", day)
         self.prev_price = self.ticker.loc[day]["Close"] 
-        self.day_count += 1
+        self.RSI_day_count += 1
 
         self.portfolio_vals.append(self.getCurrVal(day))
